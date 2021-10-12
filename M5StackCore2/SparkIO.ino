@@ -335,7 +335,7 @@ void SparkIO::sp_process_in_chunks() {
 void SparkIO::sp_read_byte(uint8_t *b)
 {
   uint8_t a;
-  in_message.get(&a);
+  sp_in_message.get(&a);
   *b = a;
 }   
    
@@ -824,8 +824,8 @@ void SparkIO::sp_process_out_chunks() {
     sp_out_message.get(&sp_oc_sub);
     sp_out_message.get(&len_h);
     sp_out_message.get(&len_l);
-    bytes_to_uint(len_h, len_l, &oc_len);
-    len = oc_len -4;
+    bytes_to_uint(len_h, len_l, &sp_oc_len);
+    len = sp_oc_len -4;
 
     if (len > 0x80) { //this is a multi-chunk message
       num_chunks = int(len / 0x80) + 1;
@@ -870,7 +870,7 @@ void SparkIO::sp_process_out_chunks() {
     // create chunk header
       sp_out_chunk.add(0xf0);
       sp_out_chunk.add(0x01);
-      sp_out_chunk.add(oc_seq);
+      sp_out_chunk.add(sp_oc_seq);
 
       checksum_pos = sp_out_chunk.get_pos();
       sp_out_chunk.add(0); // checksum
@@ -898,7 +898,7 @@ void SparkIO::sp_process_out_blocks() {
   uint8_t cmd, sub;
 
   while (!sp_out_chunk.is_empty() && sp_ob_ok_to_send) {
-    ob_pos = 16;
+    sp_ob_pos = 16;
   
     sp_out_block[0]= 0x01;
     sp_out_block[1]= 0xfe;  
