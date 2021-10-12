@@ -23,7 +23,7 @@ void setup() {
   M5.Lcd.setTextSize(3);
 
   curr_preset = 0;
-  connect_to_all(true);
+  connect_to_all(true); // true means use BLE for all comms (iOS), false means use BLE to the amp but bluetooth classic to the app (for Android :-) )
 }
 
 

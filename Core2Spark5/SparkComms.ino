@@ -159,10 +159,12 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
 static CharacteristicCallbacks chrCallbacks_s, chrCallbacks_r;
 
 bool connected_pedal, connected_sp;
-
+bool bt_connected;
 
 void connect_to_all(bool isBLE) {
   int i;
+  uint8_t b;
+  
   is_ble = isBLE;
   
  // Create server to act as Spark
@@ -188,10 +190,7 @@ void connect_to_all(bool isBLE) {
 
     Serial.println("Service set up");
   }
-  else {
-    
-  }
-  
+
   
   // Connect to Spark
   connected_sp = false;
@@ -259,7 +258,6 @@ void connect_to_all(bool isBLE) {
         }
       }
     }
-
   }
 
   Serial.println("Available for app to connect...");
@@ -267,6 +265,18 @@ void connect_to_all(bool isBLE) {
   // start advertising
   if (is_ble) {
     pAdvertising->start(); 
+  } 
+  else {
+    // now advertise Serial Bluetooth
+    bt = new BluetoothSerial();
+    if (!bt->begin (SPARK_BT_NAME, true)) {
+      DEBUG("Bluetooth init fail");
+      while (true);
+    }
+
+    // flush anything read from Spark - just in case
+    while (bt->available())
+      b = bt->read(); 
   }
 
 }
@@ -289,28 +299,6 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 static ClientCallbacks clientCB;
 
 
-void start_bt(bool isBLE) {
-    bt = new BluetoothSerial();
-  
-    if (!bt->begin (MY_NAME, true)) {
-      DEBUG("Bluetooth init fail");
-      while (true);
-}
-
-void connect_to_spark() {
-    while (!connected) {
-      connected = bt->connect(SPARK_NAME);
-      if (!(connected && bt->hasClient())) {
-        connected = false;
-        DEBUG("Not connected");
-        delay(2000);
-      }
-    }
-
-    // flush anything read from Spark - just in case
-    while (bt->available())
-      b = bt->read(); 
-  }
 
 */
 
@@ -321,10 +309,6 @@ bool app_available() {
   else {
     return !ble_app_in.is_empty();
   }
-}
-
-bool sp_available() {
-  return !ble_in.is_empty();
 }
 
 uint8_t app_read() {
@@ -338,12 +322,6 @@ uint8_t app_read() {
   }
 }
 
-uint8_t sp_read() {
-  uint8_t b;
-  ble_in.get(&b);
-  return b;
-}
-
 void app_write(byte *buf, int len) {
   if (!is_ble) 
     bt->write(buf, len);
@@ -351,6 +329,16 @@ void app_write(byte *buf, int len) {
     pCharacteristic_send->setValue(buf, len);
     pCharacteristic_send->notify(true);
   }
+}
+
+bool sp_available() {
+  return !ble_in.is_empty();
+}
+
+uint8_t sp_read() {
+  uint8_t b;
+  ble_in.get(&b);
+  return b;
 }
 
 void sp_write(byte *buf, int len) {

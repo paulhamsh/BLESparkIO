@@ -169,24 +169,25 @@ void connect_to_all(bool isBLE) {
   NimBLEDevice::init("Spark 40 BLE");
   pClient_sp = NimBLEDevice::createClient();
   pScan      = NimBLEDevice::getScan();
-    
-  // Set up server
-  pServer = NimBLEDevice::createServer();
-  pService = pServer->createService(S_SERVICE);
-  pCharacteristic_receive = pService->createCharacteristic(S_CHAR1, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR);
-  pCharacteristic_send = pService->createCharacteristic(S_CHAR2, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);  
-  pCharacteristic_receive->setCallbacks(&chrCallbacks_r);
-  pCharacteristic_send->setCallbacks(&chrCallbacks_s);
 
-  pService->start();
-  pServer->start();
+  if (is_ble) {  
+    // Set up server
+    pServer = NimBLEDevice::createServer();
+    pService = pServer->createService(S_SERVICE);
+    pCharacteristic_receive = pService->createCharacteristic(S_CHAR1, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR);
+    pCharacteristic_send = pService->createCharacteristic(S_CHAR2, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);  
+    pCharacteristic_receive->setCallbacks(&chrCallbacks_r);
+    pCharacteristic_send->setCallbacks(&chrCallbacks_s);
 
-  pAdvertising = NimBLEDevice::getAdvertising(); // create advertising instance
-  pAdvertising->addServiceUUID(pService->getUUID()); // tell advertising the UUID of our service
-  pAdvertising->setScanResponse(true);  
+    pService->start();
+    pServer->start();
 
-  Serial.println("Service set up");
+    pAdvertising = NimBLEDevice::getAdvertising(); // create advertising instance
+    pAdvertising->addServiceUUID(pService->getUUID()); // tell advertising the UUID of our service
+    pAdvertising->setScanResponse(true);  
 
+    Serial.println("Service set up");
+  }
   
   // Connect to Spark
   connected_sp = false;
@@ -260,18 +261,15 @@ void connect_to_all(bool isBLE) {
   Serial.println("Available for app to connect...");
   
   // start advertising
-  pAdvertising->start(); 
+  if (is_ble) {
+    pAdvertising->start(); 
+  }
 
 }
 
 // NEW CODE ENDS ------------------------------------------
 
 /*
-
-// Updated with changes from David Thompson github: https://github.com/happyhappysundays/SparkBoxHeltec - most of the BLE callbacks
-
-//BLE callbacks
-
 
 // Callbacks for client events
 class ClientCallbacks : public NimBLEClientCallbacks {
@@ -284,72 +282,18 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   }
 };
 
-// Callbacks for advertisment events
-class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
-  void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    if(advertisedDevice->isAdvertisingService(NimBLEUUID("ffc0")))
-    {
-      NimBLEDevice::getScan()->stop();
-    }
-  }
-};
-
 static ClientCallbacks clientCB;
 
-// Callback to process the results of the last scan or restart it 
-//void scanEndedCB(NimBLEScanResults results){
-//    DEBUG("Scan Ended");
-//}
-
-
-// Callback function to write to ring buffer
-void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
-  int i;
-
-  for (i = 0; i < length; i++) 
-    ble_in.add(pData[i]);
-
-  ble_in.commit();
-}
-
-
-
-
-// Non callback functions
-void start_ser() {
-  uint8_t b;
-  
-  ser = new HardwareSerial(2); 
-  // 5 is rx, 18 is tx
-  ser->begin(HW_BAUD, SERIAL_8N1, 5, 18);
-
-  while (ser->available())
-    b = ser->read(); 
-}
 
 void start_bt(bool isBLE) {
-  is_ble = isBLE;
-  if (!is_ble) {
     bt = new BluetoothSerial();
   
     if (!bt->begin (MY_NAME, true)) {
       DEBUG("Bluetooth init fail");
       while (true);
-    }    
-  }
-  else {
-    NimBLEDevice::init("");
-  }
 }
 
 void connect_to_spark() {
-  uint8_t b;
-  int i;
-  bool connected;
-
-  connected = false;
-
-  if (!is_ble) {
     while (!connected) {
       connected = bt->connect(SPARK_NAME);
       if (!(connected && bt->hasClient())) {
@@ -363,57 +307,6 @@ void connect_to_spark() {
     while (bt->available())
       b = bt->read(); 
   }
-  else {
-    while (!connected) {
-      NimBLEDevice::init("");
-  
-      NimBLEScan *pScan = NimBLEDevice::getScan();
-      
-      // Create a callback that gets called when advertisers are found 
-      pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-      NimBLEScanResults results = pScan->start(4);
-
-      NimBLEUUID serviceUuid("ffc0");               // service ffc0 for Spark
-
-      for(i = 0; i < results.getCount() && !connected; i++) {
-        device = results.getDevice(i);
-    
-        if (device.isAdvertisingService(serviceUuid)) {
-          pClient = NimBLEDevice::createClient();
-          pClient->setClientCallbacks(&clientCB, false);
-        
-          if(pClient->connect(&device)) {
-            connected = true;
-            DEBUG("BLE Connected");
-          }
-        }
-      }
-
-      // Get the services
-  
-      if (connected) {
-        pService = pClient->getService(serviceUuid);
-                
-        if (pService != nullptr) {
-          pSender   = pService->getCharacteristic("ffc1");
-          pReceiver = pService->getCharacteristic("ffc2");
-          if (pReceiver && pReceiver->canNotify()) {
-            if (!pReceiver->subscribe(true, notifyCB, true)) {
-              connected = false;
-              pClient->disconnect();
-              DEBUG("BLE not connected - could not subscribe to callback");
-            }
-          }
-        }
-      }
-      
-      if (!connected) {
-        DEBUG ("Not connected - trying again");
-        delay(200); // Idea from https://github.com/espressif/esp-idf/issues/5105
-      }
-    }
-  }
-}
 
 */
 

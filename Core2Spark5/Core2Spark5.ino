@@ -32,6 +32,7 @@ void loop() {
   M5.update();
 
   if (M5.BtnA.wasPressed() ) {
+    Serial.println("BUTTON PRESS");
     curr_preset++;
     if (curr_preset > 3) curr_preset=0;
     spark_io.sp_change_hardware_preset(curr_preset);
