@@ -1,5 +1,5 @@
 
-#define IOS
+//#define IOS
 #define M5_BRD
 
 #ifdef M5_BRD
@@ -26,7 +26,7 @@ void setup() {
   M5.begin();
   M5.Lcd.fillScreen(TFT_BLACK);
   M5.Lcd.setTextSize(4);
-  M5.Lcd.println("Core2Spark v6");
+  M5.Lcd.println("Core2Spark v7");
   M5.Lcd.println("-------------");
   Serial.println("Started");
   M5.Lcd.setTextSize(3);

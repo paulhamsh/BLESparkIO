@@ -15,7 +15,6 @@ void notifyCB_sp(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
   int i;
   byte b;
 
-  DEBUG("Spark sent info");
   for (i = 0; i < length; i++) {
     b = pData[i];
     ble_in.add(b);
@@ -62,13 +61,7 @@ void notifyCB_pedal(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pDa
 
 #ifdef IOS
 class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
-  void onRead(NimBLECharacteristic* pCharacteristic){
-  };
-
   void onWrite(NimBLECharacteristic* pCharacteristic) {
-        Serial.print(pCharacteristic->getUUID().toString().c_str());
-        Serial.print(": onWrite(), value: ");
-      
         int j, l;
         const char *p;
         byte b;
@@ -77,23 +70,9 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         for (j=0; j < l; j++) {
           b = p[j];
           ble_app_in.add(b);
-          Serial.print(" ");
-          Serial.print(b, HEX); 
         }
-        Serial.println();
         ble_app_in.commit();
   };
-/*   
-
-  void onNotify(NimBLECharacteristic* pCharacteristic) {
-  };
-
-  void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {
-  };
-
-  void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue) {
-  };
-*/
 };
 
 static CharacteristicCallbacks chrCallbacks_s, chrCallbacks_r;
