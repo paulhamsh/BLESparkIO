@@ -1,6 +1,6 @@
 
 //#define IOS
-#define M5_BRD
+//#define M5_BRD
 
 #ifdef M5_BRD
 #include <M5Core2.h> 
@@ -22,8 +22,6 @@ int  curr_preset;
 
 void setup() {
   // put your setup code here, to run once:
-
-  Serial.println("Started");
   
 #ifdef M5_BRD
   M5.begin();
@@ -35,12 +33,11 @@ void setup() {
 #else
   M5.Lcd.println("Android");
 #endif  
-  M5.Lcd.println("-------------");
-  M5.Lcd.setTextSize(3);
 #else
   Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Sparker v7");
+  Heltec.display->display();
 #ifdef IOS
   Heltec.display->drawString(0, 20, "IOS");
 #else
@@ -49,6 +46,7 @@ void setup() {
   Heltec.display->display();
 #endif
 
+  Serial.println("Started");
   curr_preset = 0;
   connect_to_all(); 
 }
