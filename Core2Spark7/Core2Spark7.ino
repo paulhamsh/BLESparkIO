@@ -22,18 +22,30 @@ int  curr_preset;
 
 void setup() {
   // put your setup code here, to run once:
+
+  Serial.println("Started");
+  
 #ifdef M5_BRD
   M5.begin();
   M5.Lcd.fillScreen(TFT_BLACK);
   M5.Lcd.setTextSize(4);
-  M5.Lcd.println("Core2Spark v7");
+  M5.Lcd.println("Sparker v7");
+#ifdef IOS
+  M5.Lcd.println("IOS");
+#else
+  M5.Lcd.println("Android");
+#endif  
   M5.Lcd.println("-------------");
-  Serial.println("Started");
   M5.Lcd.setTextSize(3);
 #else
   Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Enable*/, true /*Serial Enable*/);
   Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Sparker");
+  Heltec.display->drawString(0, 0, "Sparker v7");
+#ifdef IOS
+  Heltec.display->drawString(0, 20, "IOS");
+#else
+  Heltec.display->drawString(0, 20, "Android");
+#endif  
   Heltec.display->display();
 #endif
 
