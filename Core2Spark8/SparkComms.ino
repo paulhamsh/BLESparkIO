@@ -20,30 +20,61 @@ void notifyCB_sp(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
 void notifyCB_pedal(BLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
 
   int i;
-  
-  DEBUG("Pedal sent info");
 
+  // LPD8 gives 0xab 0xcd 0x90 0xNN 0xef or 0xab 0xcd 0x80 0xNN 0x00 for on and off
+  // NN is 1f 21 23 24
+  // NN is 18 1a 1c 1d
+
+  // Blueboard does this:
   // In mode B the BB gives 0x80 0x80 0x90 0xNN 0x64 or 0x80 0x80 0x80 0xNN 0x00 for on and off
   // In mode C the BB gives 0x80 0x80 0xB0 0xNN 0x7F or 0x80 0x80 0xB0 0xNN 0x00 for on and off
-
 
   if (pData[2] == 0x90 || (pData[2] == 0xB0 && pData[4] == 0x7F)) {
     switch (pData[3]) {
       case 0x3C:
       case 0x14:
+      
+      case 0x1f:
+      case 0x18:
+      
+      case 0x00:
+      case 0x04:
         curr_preset = 0;
+        Serial.println("0");
         break;
       case 0x3E:
       case 0x15:
+
+      case 0x21:
+      case 0x1a:
+      
+      case 0x01:
+      case 0x05:
         curr_preset = 1;
+        Serial.println("1");
         break;
       case 0x40:
       case 0x16:
+
+      case 0x23:
+      case 0x1c:
+      
+      case 0x02:
+      case 0x06:
         curr_preset = 2;
+        Serial.println("2");
         break;
-      case 0x41:
-      case 0x17:
+      case 0x41:   // Blueboard B
+      case 0x17:   // Blueboard C
+
+      case 0x24:   // LPD 8 pad
+      case 0x1d:   // LPD 8 pad
+      
+      case 0x03:   // LPD8 dial
+      case 0x07:
+      
         curr_preset = 3;
+        Serial.println("3");
         break;
     }
   triggered_pedal = true;
@@ -113,9 +144,9 @@ void connect_to_all() {
   BLEUUID PedalServiceUuid(PEDAL_SERVICE);
 
   
-  while (!connected_sp /* || !connected_pedal*/ ) {
+  while (!connected_sp || !connected_pedal ) {
     pResults = pScan->start(4);
-    for(i = 0; i < pResults.getCount()  && (!connected_sp /* || !connected_pedal */); i++) {
+    for(i = 0; i < pResults.getCount()  && (!connected_sp  || !connected_pedal); i++) {
       device = pResults.getDevice(i);
 
       if (device.isAdvertisingService(SpServiceUuid)) {
@@ -151,7 +182,6 @@ void connect_to_all() {
         }
       }
     }
-
 
 
     if (connected_pedal) {
@@ -209,7 +239,7 @@ bool app_available() {
 }
 
 uint8_t app_read() {
-  if (is_ble) {
+   if (is_ble) {
      uint8_t b;
      ble_app_in.get(&b);
      return b;
@@ -225,6 +255,14 @@ void app_write(byte *buf, int len) {
   }
   else  
     bt->write(buf, len);
+
+/*
+if (pCharacteristic_send != nullptr) {
+    pCharacteristic_send->setValue(buf, len);
+    pCharacteristic_send->notify(true);
+}
+    bt->write(buf, len);
+*/
 }
 
 bool sp_available() {

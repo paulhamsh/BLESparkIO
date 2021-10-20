@@ -1,5 +1,4 @@
 
-#define IOS
 #define M5_BRD
 
 #ifdef M5_BRD
@@ -10,6 +9,28 @@
 
 #include "Spark.h"
 #include "SparkIO.h"
+
+byte preset_spk_cmd[] = {
+  0x01, 0xFE, 0x00, 0x00,
+  0x53, 0xFE, 0x1A, 0x00,
+  0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00,
+  0xF0, 0x01, 0x24, 0x00,
+  0x01, 0x38, 0x00, 0x00,
+  0x00, 0xF7
+};
+
+byte preset_app_cmd[] = {
+  0x01, 0xFE, 0x00, 0x00,
+  0x41, 0xFF, 0x1A, 0x00,
+  0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00,
+  0xF0, 0x01, 0x50, 0x00,
+  0x03, 0x38, 0x00, 0x00,
+  0x00, 0xF7
+};
+
+const int preset_cmd_size = 26;
 
 SparkIO spark_io(true);  // true = passthru
 
@@ -84,15 +105,18 @@ M5.update();
     }
   }
   
-/*
+
   if (triggered_pedal) {
     triggered_pedal = false;
-    if (connected_sp) {
-      preset_cmd[preset_cmd_size-2] = curr_preset;
-      pSender_sp->writeValue(preset_cmd, preset_cmd_size, false);
-      Serial.println("Sending preset command to Spark");
-    }
+    
+    preset_spk_cmd[preset_cmd_size-2] = curr_preset;
+    preset_app_cmd[preset_cmd_size-2] = curr_preset;
+    preset_app_cmd[preset_cmd_size-7] = curr_preset; // set the checksum too 
+     
+    sp_write(preset_spk_cmd, preset_cmd_size);
+    app_write(preset_app_cmd, preset_cmd_size);
+    Serial.println("Sending preset commands");
   }
-*/
+
 
 }
