@@ -144,9 +144,9 @@ void connect_to_all() {
   BLEUUID PedalServiceUuid(PEDAL_SERVICE);
 
   
-  while (!connected_sp || !connected_pedal ) {
+  while (!connected_sp /* || !connected_pedal */ ) {
     pResults = pScan->start(4);
-    for(i = 0; i < pResults.getCount()  && (!connected_sp  || !connected_pedal); i++) {
+    for(i = 0; i < pResults.getCount()  && (!connected_sp  /*|| !connected_pedal */); i++) {
       device = pResults.getDevice(i);
 
       if (device.isAdvertisingService(SpServiceUuid)) {
