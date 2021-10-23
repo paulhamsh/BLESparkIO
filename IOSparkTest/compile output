@@ -1,7 +1,7 @@
 Arduino IDE 1.8.12
 Heltec ESP32 Dev-Boards 1.1.0
 
-
+```
 Sketch uses 997259 bytes (76%) of program storage space. Maximum is 1310720 bytes.
 Global variables use 99344 bytes (30%) of dynamic memory, leaving 228336 bytes for local variables. Maximum is 327680 bytes.
 esptool.py v2.6
@@ -43,4 +43,28 @@ Hash of data verified.
 
 Leaving...
 Hard resetting via RTS pin...
+```
+
+```
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0018,len:4
+load:0x3fff001c,len:1044
+load:0x40078000,len:8896
+load:0x40080400,len:5816
+entry 0x400806ac
+Serial initial done
+you can see OLED printed OLED initial done!
+Started
+Service set up
+Found Spark - trying to connect....
+Spark connected
+Starting classic bluetooth
+Spark 40 Audio set up
+Available for app to connect...
+```
 
